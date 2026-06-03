@@ -31,33 +31,6 @@ Sonra tarayıcıdan şu adresi aç:
 http://localhost:8080
 ```
 
-## GitHub'a yükleme
-
-```bash
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/KULLANICI_ADI/tasarruf-finansman-hesaplayici.git
-git push -u origin main
-```
-
-GitHub CLI kullanıyorsan:
-
-```bash
-gh repo create tasarruf-finansman-hesaplayici --public --source=. --remote=origin --push
-```
-
-## GitHub Pages yayına alma
-
-1. GitHub reposunda **Settings** sekmesine gir.
-2. **Pages** menüsünü aç.
-3. **Build and deployment** bölümünde **Deploy from a branch** seç.
-4. Branch olarak `main`, klasör olarak `/root` seç.
-5. Kaydet.
-
-Birkaç dakika sonra GitHub Pages linki aktif olur.
-
 ## Önemli uyarı
 
 Bu uygulama, örnek teklif PDF'lerindeki oran ve ödeme planı mantığına göre hazırlanmış tahmini bir hesaplayıcıdır. BDDK mevzuatı ve şirketlerin tip sözleşme çerçevesi dikkate alınsa da nihai teslim / tahsisat tarihi, ilgili tasarruf finansman şirketiyle imzalanacak sözleşmeye, müşteri ödeme performansına ve şirketin yürürlükteki tarifesine bağlı olarak değişebilir.
