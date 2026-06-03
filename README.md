@@ -19,16 +19,10 @@ Türkiye'deki tasarruf finansman teklif örneklerine göre hazırlanmış, mobil
 
 Bu proje tek dosyalık statik bir uygulamadır. Bilgisayarında çalıştırmak için `index.html` dosyasını tarayıcıda açman yeterlidir.
 
-Yerel sunucu ile çalıştırmak istersen:
-
-```bash
-python3 -m http.server 8080
-```
-
 Sonra tarayıcıdan şu adresi aç:
 
 ```text
-http://localhost:8080
+https://mhsnarsln09.github.io/tasarruf-finansman-hesaplayici/
 ```
 
 ## Önemli uyarı
