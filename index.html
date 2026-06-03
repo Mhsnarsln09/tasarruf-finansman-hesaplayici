@@ -1,0 +1,698 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tasarruf Finansman Serbest Plan Hesaplayıcı</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --ink: #152238;
+      --muted: #667085;
+      --line: #d8dee9;
+      --accent: #13b8b7;
+      --accent2: #eefafa;
+      --warn: #fff5e6;
+      --danger: #fff1f0;
+      --ok: #edf7ed;
+      --shadow: 0 10px 25px rgba(15, 23, 42, .08);
+      --radius: 18px;
+      --radius2: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+    .wrap { max-width: 1280px; margin: 0 auto; padding: 26px; }
+    .hero {
+      background: linear-gradient(135deg, #0f766e, #0ea5a4 55%, #22c7c4);
+      color: white;
+      padding: 28px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero:after {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -80px;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: rgba(255,255,255,.14);
+    }
+    .hero h1 { margin: 0 0 10px; font-size: clamp(28px, 4vw, 46px); letter-spacing: -.03em; }
+    .hero p { margin: 0; max-width: 920px; color: rgba(255,255,255,.92); line-height: 1.5; }
+    .grid { display: grid; grid-template-columns: 410px 1fr; gap: 20px; margin-top: 20px; align-items: start; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+    .card h2 { margin: 0; font-size: 20px; }
+    .card .head { padding: 20px 20px 10px; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
+    .card .body { padding: 18px 20px 20px; }
+    .field { margin-bottom: 14px; }
+    label { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 6px; color: #344054; font-size: 13px; font-weight: 700; }
+    label span { color: var(--muted); font-weight: 500; }
+    input, select {
+      width: 100%;
+      border: 1px solid #cfd7e6;
+      border-radius: 12px;
+      background: white;
+      color: var(--ink);
+      padding: 12px 12px;
+      font-size: 15px;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(19,184,183,.12); }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .hint { color: var(--muted); font-size: 12px; line-height: 1.45; margin-top: 6px; }
+    .buttons { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+      background: #0f766e;
+    }
+    button.secondary { background: #ecfdfd; color: #0f766e; border: 1px solid #bde9e8; }
+    button.ghost { background: #f2f4f7; color: #344054; }
+    button:hover { filter: brightness(.97); }
+    .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+    .metric { padding: 16px; border-radius: 16px; background: #f8fafc; border: 1px solid #e4e7ec; min-height: 94px; }
+    .metric strong { display: block; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+    .metric .val { font-size: 22px; font-weight: 850; letter-spacing: -.02em; }
+    .metric.delivery { background: var(--accent2); border-color: #a6e7e5; }
+    .metric.bad { background: var(--warn); border-color: #ffd8a8; }
+    .metric.cost { background: #f4f3ff; border-color: #dad7fe; }
+    .notice { padding: 14px 16px; border-radius: 14px; border: 1px solid #ffd8a8; background: var(--warn); color: #7a4b00; line-height: 1.45; font-size: 13px; margin: 12px 0; }
+    .notice.ok { background: var(--ok); border-color: #b8dfba; color: #215e24; }
+    .notice.danger { background: var(--danger); border-color: #ffccc7; color: #8c1d18; }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 16px; background: white; max-height: 680px; }
+    table { border-collapse: collapse; width: 100%; min-width: 980px; font-size: 13px; }
+    thead th { position: sticky; top: 0; z-index: 1; background: #f8fafc; color: #344054; text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+    tbody td { padding: 10px; border-bottom: 1px solid #eef2f7; vertical-align: top; white-space: nowrap; }
+    tbody tr.delivery-best { background: #ccfbf1; font-weight: 800; }
+    tbody tr.delivery-worst { background: #fff7ed; }
+    tbody tr.hash { background: #fbfcfe; color: #344054; }
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border-radius: 999px; background: #eefafa; color: #0f766e; font-weight: 800; font-size: 12px; }
+    .pill.warn { background: #fff3cd; color: #8a5a00; }
+    .pill.gray { background: #f2f4f7; color: #475467; }
+    .footer-notes { color: #475467; font-size: 12px; line-height: 1.5; margin-top: 14px; }
+    .tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .tab { padding: 7px 10px; border: 1px solid #d0d5dd; border-radius: 999px; color: #344054; background: white; font-size: 12px; font-weight: 700; }
+    .tab.active { background: #ecfdfd; border-color: #a6e7e5; color: #0f766e; }
+    .small { font-size: 12px; color: var(--muted); }
+    .scenario { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0 16px; }
+    .scenario .box { padding: 14px; border-radius: 16px; border: 1px solid var(--line); background: #fff; }
+    .scenario .box h3 { margin: 0 0 8px; font-size: 15px; }
+    .scenario .box p { margin: 0; color: #475467; line-height: 1.45; font-size: 13px; }
+    details { margin-top: 10px; }
+    summary { cursor: pointer; color: #0f766e; font-weight: 800; }
+    @media (max-width: 1100px) {
+      .wrap { padding: 20px; }
+      .grid { grid-template-columns: 380px 1fr; gap: 16px; }
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .input-card { position: static; }
+      .row3 { grid-template-columns: 1fr; }
+      .table-wrap { max-height: none; }
+    }
+    @media (max-width: 720px) {
+      body { background: #fff; }
+      .wrap { padding: 10px; }
+      .hero {
+        padding: 18px;
+        border-radius: 16px;
+      }
+      .hero:after { width: 170px; height: 170px; right: -70px; top: -70px; }
+      .hero h1 { font-size: 25px; line-height: 1.05; }
+      .hero p { font-size: 13px; }
+      .card { border-radius: 16px; box-shadow: none; }
+      .card .head {
+        padding: 16px 14px 6px;
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .card .body { padding: 14px; }
+      .metrics, .scenario, .row2, .row3 { grid-template-columns: 1fr; }
+      .metrics { gap: 8px; }
+      .metric { min-height: auto; padding: 13px; }
+      .metric .val { font-size: 20px; }
+      label { display: block; font-size: 12px; }
+      label span { display: block; margin-top: 2px; }
+      input, select {
+        min-height: 46px;
+        font-size: 16px;
+        border-radius: 11px;
+      }
+      .buttons { display: grid; grid-template-columns: 1fr; }
+      button { width: 100%; min-height: 44px; }
+      .tabs { width: 100%; }
+      .tab { max-width: 100%; white-space: normal; }
+      .notice { font-size: 12px; padding: 12px; }
+      .table-wrap {
+        border: 0;
+        border-radius: 0;
+        overflow: visible;
+        background: transparent;
+      }
+      table {
+        min-width: 0;
+        width: 100%;
+        font-size: 13px;
+      }
+      thead { display: none; }
+      tbody { display: block; }
+      tbody tr {
+        display: block;
+        margin: 0 0 12px;
+        border: 1px solid #e4e7ec;
+        border-radius: 14px;
+        background: #fff;
+        overflow: hidden;
+      }
+      tbody tr.hash { background: #fbfcfe; }
+      tbody tr.delivery-best { background: #ecfdfd; border-color: #8be5df; }
+      tbody tr.delivery-worst { background: #fff7ed; border-color: #ffd8a8; }
+      tbody td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 9px 12px;
+        border-bottom: 1px solid #eef2f7;
+        white-space: normal;
+        text-align: right;
+      }
+      tbody td:last-child { border-bottom: 0; }
+      tbody td::before {
+        content: attr(data-label);
+        flex: 0 0 46%;
+        text-align: left;
+        color: #667085;
+        font-weight: 700;
+      }
+      .pill { white-space: normal; text-align: left; justify-content: flex-start; }
+      .footer-notes { font-size: 11.5px; }
+    }
+    @media (max-width: 390px) {
+      .wrap { padding: 8px; }
+      .hero h1 { font-size: 22px; }
+      .card .body { padding: 12px; }
+      tbody td { font-size: 12px; gap: 8px; }
+      tbody td::before { flex-basis: 44%; }
+    }
+    @media print {
+      body { background: white; }
+      .wrap { max-width: none; padding: 0; }
+      .hero, .input-card, .buttons, details { display: none !important; }
+      .card { border: 0; box-shadow: none; }
+      .table-wrap { max-height: none; overflow: visible; }
+      thead th { position: static; }
+      table { min-width: 0; font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Tasarruf Finansman Serbest Plan Hesaplayıcı</h1>
+      <p>Hedef tutar, peşinat, aylık ödeme ve artış seçimine göre örnek ödeme planı, vade, organizasyon ücreti ve tahmini tahsisat/teslim ayını hesaplar. Hesaplama, yüklediğiniz gerçek teklif PDF’lerindeki örnek yapıya göre ayarlanmıştır.</p>
+    </section>
+
+    <main class="grid">
+      <section class="card input-card">
+        <div class="head">
+          <h2>Plan girişi</h2>
+          <span class="pill gray">Serbest / müşteri bazlı</span>
+        </div>
+        <div class="body">
+          <div class="row2">
+            <div class="field">
+              <label for="productType">Tasarruf türü</label>
+              <select id="productType">
+                <option value="Tasit">Taşıt</option>
+                <option value="Konut">Konut</option>
+                <option value="Isyeri">Çatılı iş yeri</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="startDate">Başlangıç / sözleşme tarihi</label>
+              <input id="startDate" type="date" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="targetAmount">Plan / tasarruf tutarı <span>TL</span></label>
+            <input id="targetAmount" inputmode="decimal" value="2.000.000" />
+          </div>
+
+          <div class="field">
+            <label for="downPayment">Peşinat <span>boşsa 0 kabul edilir</span></label>
+            <input id="downPayment" inputmode="decimal" value="400.000" />
+          </div>
+
+          <div class="field">
+            <label for="monthlyPayment">İlk aylık ödeme <span>boş bırakılabilir</span></label>
+            <input id="monthlyPayment" inputmode="decimal" placeholder="Otomatik hesaplansın" />
+            <div class="hint">Boş kalırsa PDF örnekleriyle uyumlu bir ilk taksit tahmini kullanılır. Girerseniz plan tamamen bu tutar üzerinden kurulur.</div>
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <label for="increaseMode">Artış seçimi</label>
+              <select id="increaseMode">
+                <option value="20">Artışlı - yıllık %20</option>
+                <option value="0">Artışsız - %0</option>
+                <option value="custom">Özel oran</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="customIncrease">Yıllık artış oranı <span>%</span></label>
+              <input id="customIncrease" inputmode="decimal" value="20" />
+            </div>
+          </div>
+
+          <div class="row3">
+            <div class="field">
+              <label for="orgFeeRate">Organizasyon ücreti <span>%</span></label>
+              <input id="orgFeeRate" inputmode="decimal" value="7" />
+            </div>
+            <div class="field">
+              <label for="paymentDay">Aylık ödeme günü</label>
+              <input id="paymentDay" type="number" min="1" max="28" value="10" />
+            </div>
+            <div class="field">
+              <label for="finalMultiplier">Son taksit esneme</label>
+              <select id="finalMultiplier">
+                <option value="2">PDF uyumlu: max 2x</option>
+                <option value="1">Esnetme yok</option>
+                <option value="3">Max 3x</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row2">
+            <div class="field">
+              <label for="orgMode">Org. ücreti tahsilatı</label>
+              <select id="orgMode">
+                <option value="pesin">Peşin</option>
+                <option value="taksitli">Taksitli</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="orgInstallments">Org. taksit sayısı</label>
+              <input id="orgInstallments" type="number" min="1" max="60" value="12" />
+            </div>
+          </div>
+
+          <div class="buttons">
+            <button id="calcBtn">Planı hesapla</button>
+            <button class="secondary" id="sampleCarInc">2M taşıt / %20 örnek</button>
+            <button class="secondary" id="sampleCarFlat">2M taşıt / artışsız örnek</button>
+            <button class="secondary" id="sampleHomeInc">2.5M konut örnek</button>
+          </div>
+
+          <details>
+            <summary>Hesap mantığı</summary>
+            <div class="footer-notes">
+              <p><b>Organizasyon ücreti:</b> varsayılan olarak hedef tutarın %7’si alınır. Bu oran, yüklenen 2.000.000 TL ve 2.500.000 TL örneklerinde 140.000 TL ve 175.000 TL olarak görülür.</p>
+              <p><b>Teslim/tahsisat ayı:</b> müşteri bazlı planlarda asgari %40 tasarruf, sözleşme süresinin %40’ı, peşinat indirimi, 150 gün ve 5 ödeme koşulu birlikte değerlendirilir. Ara dönem ödemeleri teslimi öne çekmek için kullanılmaz.</p>
+              <p><b>Vade:</b> aylık ödeme dizisi hedef tutardan peşinat düşülerek hesaplanır. Artışlı planda taksit her 12 ayda bir seçilen oran kadar artar. Son ay, PDF örneklerinde görülen şekilde kalan bakiyeyi kapatacak final taksiti olabilir.</p>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="head">
+          <h2>Teklif ve ödeme planı</h2>
+          <div class="tabs">
+            <span class="tab active" id="statusTab">Hazır</span>
+          </div>
+        </div>
+        <div class="body">
+          <div id="warnings"></div>
+          <div class="metrics" id="metrics"></div>
+          <div class="scenario" id="scenarios"></div>
+          <div class="buttons" style="margin-bottom:14px">
+            <button class="ghost" id="printBtn">PDF / yazdır</button>
+            <button class="ghost" id="csvBtn">CSV indir</button>
+          </div>
+          <div class="table-wrap">
+            <table id="planTable">
+              <thead>
+                <tr>
+                  <th>Dönem</th>
+                  <th>Taksit tarihi</th>
+                  <th>Tasarruf / finansman ödemesi</th>
+                  <th>Org. ödemesi</th>
+                  <th>Toplam aylık çıkış</th>
+                  <th>Kümülatif tasarruf</th>
+                  <th>Kümülatif toplam ödeme</th>
+                  <th>Ödeme türü</th>
+                  <th>Not</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div class="footer-notes">
+            <p><b>Uyarı:</b> Bu hesaplama, şirketlerin sunduğu tip sözleşme örnekleri ve BDDK'nın belirlediği genel çerçeveye dayanmaktadır. Nihai teslimat tarihi, şirketle imzalayacağınız sözleşmeye ve ödeme performansınıza bağlı olarak değişiklik gösterebilir.</p>
+            <p>Bu ekran garanti teslimat tarihi vermez; şirketin likidite yönetimi, tarife, sözleşme şartları, ödeme gecikmesi, teminat/değerleme süreçleri ve mevzuat değişiklikleri sonucu tarih değişebilir.</p>
+            <p><b>Mevzuat referansı:</b> 6361 sayılı Kanun m. 39/A ve 39/B; Tasarruf Finansman Şirketlerinin Kuruluş ve Faaliyet Esasları Hakkında Yönetmelik m. 16, 17, 21, 22, 28 ve 29.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+<script>
+(function() {
+  const $ = (id) => document.getElementById(id);
+  const tbody = document.querySelector('#planTable tbody');
+  let lastRows = [];
+  let lastSummary = null;
+
+  function parseNum(v) {
+    if (typeof v === 'number') return v;
+    if (!v) return 0;
+    let s = String(v).trim().replace(/\s/g, '');
+    if (!s) return 0;
+    const lastComma = s.lastIndexOf(',');
+    const lastDot = s.lastIndexOf('.');
+    if (lastComma > lastDot) {
+      s = s.replace(/\./g, '').replace(',', '.');
+    } else {
+      s = s.replace(/,/g, '');
+      const parts = s.split('.');
+      if (parts.length > 2) s = parts.join('');
+    }
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function money(n) {
+    return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(Math.round(n)) + ' TL';
+  }
+
+  function moneyRaw(n) {
+    return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(Math.round(n));
+  }
+
+  function pct(n) {
+    return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 2 }).format(n) + '%';
+  }
+
+  function dateTR(date) {
+    return new Intl.DateTimeFormat('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+  }
+
+  function addMonthsForPeriod(start, period, day) {
+    const d = new Date(start.getFullYear(), start.getMonth() + period - 1, 1);
+    const last = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(Math.max(1, day), last));
+    return d;
+  }
+
+  function round100(n) {
+    return Math.round(n / 100) * 100;
+  }
+
+  function round1000(n) {
+    return Math.round(n / 1000) * 1000;
+  }
+
+  function autoMonthly(target, down, annualIncrease) {
+    const ratio = target > 0 ? down / target : 0;
+    let baseRatio = 0.064 - (0.12 * ratio);
+    baseRatio = Math.max(0.015, Math.min(0.045, baseRatio));
+    if (annualIncrease === 0) baseRatio += 0.0025;
+    return round1000(target * baseRatio);
+  }
+
+  function getAnnualIncrease() {
+    const mode = $('increaseMode').value;
+    if (mode === 'custom') return parseNum($('customIncrease').value) / 100;
+    return Number(mode) / 100;
+  }
+
+  function syncIncrease() {
+    const mode = $('increaseMode').value;
+    if (mode !== 'custom') $('customIncrease').value = mode;
+  }
+
+  function calc() {
+    syncIncrease();
+    const target = parseNum($('targetAmount').value);
+    const down = Math.min(parseNum($('downPayment').value), target);
+    const orgRate = parseNum($('orgFeeRate').value) / 100;
+    const orgFee = round100(target * orgRate);
+    const annualIncrease = getAnnualIncrease();
+    const monthlyInput = parseNum($('monthlyPayment').value);
+    const firstMonthly = monthlyInput > 0 ? monthlyInput : autoMonthly(target, down, annualIncrease);
+    const finalMultiplier = Number($('finalMultiplier').value || 2);
+    const orgMode = $('orgMode').value;
+    const orgInstallments = Math.max(1, Number($('orgInstallments').value || 12));
+    const paymentDay = Math.max(1, Math.min(28, Number($('paymentDay').value || 10)));
+    const startValue = $('startDate').value || new Date().toISOString().slice(0,10);
+    const start = new Date(startValue + 'T12:00:00');
+    const product = $('productType').selectedOptions[0].textContent;
+
+    const warnings = [];
+    if (target <= 0) warnings.push({type: 'danger', text: 'Plan / tasarruf tutarı sıfırdan büyük olmalıdır.'});
+    if (down < 0) warnings.push({type: 'danger', text: 'Peşinat negatif olamaz.'});
+    if (firstMonthly <= 0) warnings.push({type: 'danger', text: 'Aylık ödeme sıfırdan büyük olmalıdır.'});
+    if (orgRate < 0 || orgRate > .25) warnings.push({type: 'warn', text: 'Organizasyon ücreti oranı kontrol edilmeli. Örnek PDF’lerde oran %7’dir; şirket tarifesine göre değişebilir.'});
+    if (down > target * .75) warnings.push({type: 'warn', text: 'Peşinat hedef tutarın çok yüksek bir kısmı. Teslim ayı, 150 gün ve 5 ödeme koşulu nedeniyle yine de erkene çekilemeyebilir.'});
+
+    let remaining = Math.max(0, target - down);
+    const rows = [];
+    let cumulativeSavings = down;
+    let cumulativeTotal = 0;
+    let period = 0;
+    let safety = 0;
+
+    const orgPerPeriod = orgMode === 'taksitli' ? orgFee / orgInstallments : 0;
+    if (orgMode === 'pesin' && orgFee > 0) {
+      cumulativeTotal += orgFee;
+      rows.push({ period: '#', date: start, savePay: 0, orgPay: orgFee, outflow: orgFee, cumSavings: 0, cumTotal: cumulativeTotal, type: 'Organizasyon Ücreti', note: 'Peşin tahsilat' });
+    }
+    if (down > 0) {
+      cumulativeTotal += down;
+      rows.push({ period: '#', date: start, savePay: down, orgPay: 0, outflow: down, cumSavings: down, cumTotal: cumulativeTotal, type: product + ' Planı Peşinatı', note: 'Peşinat, teslim ayı hesabında dikkate alınır' });
+    }
+
+    while (remaining > 0.5 && safety < 240) {
+      period += 1;
+      safety += 1;
+      const yearIndex = Math.floor((period - 1) / 12);
+      const regular = round100(firstMonthly * Math.pow(1 + annualIncrease, yearIndex));
+      let savePay;
+      if (remaining <= regular * finalMultiplier) {
+        savePay = remaining;
+      } else {
+        savePay = regular;
+      }
+      const orgPay = orgMode === 'taksitli' && period <= orgInstallments ? orgPerPeriod : 0;
+      remaining -= savePay;
+      cumulativeSavings += savePay;
+      cumulativeTotal += savePay + orgPay;
+      rows.push({
+        period,
+        date: period === 1 ? start : addMonthsForPeriod(start, period, paymentDay),
+        savePay,
+        orgPay,
+        outflow: savePay + orgPay,
+        cumSavings: cumulativeSavings,
+        cumTotal: cumulativeTotal,
+        type: 'Tasarruf Taksidi',
+        note: ''
+      });
+    }
+
+    if (safety >= 240) warnings.push({type: 'danger', text: 'Bu aylık ödeme ile vade 240 ayı aşıyor. Plan gerçekçi olmayabilir.'});
+
+    const term = period;
+    const fortySavings = target * .40;
+    let savingsMonth = rows.find(r => typeof r.period === 'number' && r.cumSavings >= fortySavings)?.period || term + 1;
+    const downRatio = target > 0 ? Math.max(0, Math.min(1, down / target)) : 0;
+    const reducedDurationMonth = Math.ceil(0.40 * term * Math.max(0, 1 - downRatio));
+    const unreducedDurationMonth = Math.ceil(0.40 * term);
+    const legalFloorMonth = 6;
+    let bestDeliveryMonth = Math.max(legalFloorMonth, savingsMonth, reducedDurationMonth);
+    let worstDeliveryMonth = Math.max(legalFloorMonth, savingsMonth, unreducedDurationMonth);
+
+    if (bestDeliveryMonth > term) {
+      warnings.push({type: 'danger', text: 'Hesaplanan tahsisat koşulları vade içinde sağlanmıyor. Aylık ödeme/peşinat/vade kurgusu gözden geçirilmeli.'});
+      bestDeliveryMonth = term;
+    }
+    if (worstDeliveryMonth > term) worstDeliveryMonth = term;
+
+    rows.forEach(r => {
+      if (typeof r.period === 'number') {
+        r.type = r.period <= bestDeliveryMonth ? 'Tasarruf Taksidi' : 'Finansman Taksidi';
+        if (r.period === bestDeliveryMonth) r.note = 'İdeal teslim / tahsisat ayı';
+        if (r.period === worstDeliveryMonth && worstDeliveryMonth !== bestDeliveryMonth) r.note = (r.note ? r.note + ' + ' : '') + 'Maksimum hesaplanan teslim ayı';
+      }
+    });
+
+    const firstMonthlyActual = rows.find(r => r.period === 1)?.savePay || 0;
+    const firstOrgActual = orgMode === 'pesin' ? orgFee : orgPerPeriod;
+    const totalFirstPayment = down + firstMonthlyActual + firstOrgActual;
+    const totalCost = target + orgFee;
+    const bestDate = addMonthsForPeriod(start, bestDeliveryMonth, paymentDay);
+    const worstDate = addMonthsForPeriod(start, worstDeliveryMonth, paymentDay);
+
+    lastRows = rows;
+    lastSummary = { target, down, orgFee, firstMonthly: firstMonthlyActual, totalFirstPayment, totalCost, term, bestDeliveryMonth, worstDeliveryMonth, bestDate, worstDate, annualIncrease, orgMode, orgInstallments };
+
+    renderWarnings(warnings, monthlyInput <= 0, firstMonthly);
+    renderMetrics(lastSummary);
+    renderScenarios(lastSummary);
+    renderTable(rows, bestDeliveryMonth, worstDeliveryMonth);
+    $('statusTab').textContent = product + ' | Y.A. ' + pct(annualIncrease * 100) + ' | T.A. %0';
+  }
+
+  function renderWarnings(warnings, autoUsed, autoAmount) {
+    let html = '';
+    if (autoUsed) {
+      html += `<div class="notice ok"><b>Otomatik aylık ödeme kullanıldı:</b> ${money(autoAmount)}. Bu tutar, yüklenen teklif PDF’lerindeki örnek oranlara benzetilerek oluşturulmuş tahmini bir değerdir.</div>`;
+    }
+    html += `<div class="notice"><b>Finansal okuryazarlık uyarısı:</b> Organizasyon ücreti peşin tahsil edilebilir veya şirket tarifesine göre taksitlendirilebilir. Bu ücret tahsisata esas tasarruf birikimi gibi değerlendirilmemelidir.</div>`;
+    html += warnings.map(w => `<div class="notice ${w.type === 'danger' ? 'danger' : ''}">${w.text}</div>`).join('');
+    $('warnings').innerHTML = html;
+  }
+
+  function renderMetrics(s) {
+    $('metrics').innerHTML = `
+      <div class="metric"><strong>Organizasyon ücreti</strong><div class="val">${money(s.orgFee)}</div><span class="small">Toplam maliyete eklenir</span></div>
+      <div class="metric"><strong>Vade</strong><div class="val">${s.term}. Ay</div><span class="small">Son ay kalan bakiye kapanır</span></div>
+      <div class="metric delivery"><strong>En iyi senaryo teslim</strong><div class="val">${s.bestDeliveryMonth}. Ay</div><span class="small">${dateTR(s.bestDate)}</span></div>
+      <div class="metric bad"><strong>En kötü senaryo teslim</strong><div class="val">${s.worstDeliveryMonth}. Ay</div><span class="small">${dateTR(s.worstDate)}</span></div>
+      <div class="metric"><strong>Toplam ilk ödeme</strong><div class="val">${money(s.totalFirstPayment)}</div><span class="small">Peşinat + ilk taksit + org.</span></div>
+      <div class="metric cost"><strong>Toplam maliyet</strong><div class="val">${money(s.totalCost)}</div><span class="small">Hedef + organizasyon</span></div>
+    `;
+  }
+
+  function renderScenarios(s) {
+    $('scenarios').innerHTML = `
+      <div class="box">
+        <h3>En iyi senaryo</h3>
+        <p>Ödemeler vadesinde yapılır, peşinat indirimi uygulanır, %40 tasarruf ve 150 gün/5 ödeme koşulu sağlanır. Bu durumda tahmini teslim/tahsisat: <b>${s.bestDeliveryMonth}. ay</b>.</p>
+      </div>
+      <div class="box">
+        <h3>En kötü senaryo</h3>
+        <p>Peşinatın süreyi öne çekme etkisi uygulanmaz veya sözleşme/ödeme performansı nedeniyle azami çerçeve dikkate alınır. Bu durumda tahmini teslim/tahsisat: <b>${s.worstDeliveryMonth}. ay</b>.</p>
+      </div>
+    `;
+  }
+
+  function renderTable(rows, best, worst) {
+    tbody.innerHTML = rows.map(r => {
+      const cls = r.period === '#' ? 'hash' : r.period === best ? 'delivery-best' : r.period === worst ? 'delivery-worst' : '';
+      const note = r.note ? (r.period === best ? `<span class="pill">${r.note}</span>` : `<span class="pill warn">${r.note}</span>`) : '';
+      return `<tr class="${cls}">
+        <td data-label="Dönem">${r.period}</td>
+        <td data-label="Taksit tarihi">${dateTR(r.date)}</td>
+        <td data-label="Tasarruf / finansman ödemesi">${money(r.savePay)}</td>
+        <td data-label="Org. ödemesi">${money(r.orgPay)}</td>
+        <td data-label="Toplam aylık çıkış"><b>${money(r.outflow)}</b></td>
+        <td data-label="Kümülatif tasarruf">${money(r.cumSavings)}</td>
+        <td data-label="Kümülatif toplam ödeme">${money(r.cumTotal)}</td>
+        <td data-label="Ödeme türü">${r.type}</td>
+        <td data-label="Not">${note}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  function setSample(kind) {
+    if (kind === 'carInc') {
+      $('productType').value = 'Tasit';
+      $('startDate').value = '2026-05-05';
+      $('targetAmount').value = '2.000.000';
+      $('downPayment').value = '400.000';
+      $('monthlyPayment').value = '80.000';
+      $('increaseMode').value = '20';
+      $('customIncrease').value = '20';
+      $('paymentDay').value = '10';
+      $('orgFeeRate').value = '7';
+      $('orgMode').value = 'pesin';
+      $('finalMultiplier').value = '2';
+    }
+    if (kind === 'carFlat') {
+      $('productType').value = 'Tasit';
+      $('startDate').value = '2026-05-05';
+      $('targetAmount').value = '2.000.000';
+      $('downPayment').value = '400.000';
+      $('monthlyPayment').value = '85.000';
+      $('increaseMode').value = '0';
+      $('customIncrease').value = '0';
+      $('paymentDay').value = '10';
+      $('orgFeeRate').value = '7';
+      $('orgMode').value = 'pesin';
+      $('finalMultiplier').value = '2';
+    }
+    if (kind === 'homeInc') {
+      $('productType').value = 'Konut';
+      $('startDate').value = '2025-07-28';
+      $('targetAmount').value = '2.500.000';
+      $('downPayment').value = '1.000.000';
+      $('monthlyPayment').value = '40.000';
+      $('increaseMode').value = '20';
+      $('customIncrease').value = '20';
+      $('paymentDay').value = '20';
+      $('orgFeeRate').value = '7';
+      $('orgMode').value = 'pesin';
+      $('finalMultiplier').value = '2';
+    }
+    calc();
+  }
+
+  function csvDownload() {
+    if (!lastRows.length) calc();
+    const header = ['Dönem','Taksit Tarihi','Tasarruf/Finansman Ödemesi','Organizasyon Ödemesi','Toplam Aylık Çıkış','Kümülatif Tasarruf','Kümülatif Toplam Ödeme','Ödeme Türü','Not'];
+    const lines = [header.join(';')].concat(lastRows.map(r => [
+      r.period,
+      dateTR(r.date),
+      moneyRaw(r.savePay),
+      moneyRaw(r.orgPay),
+      moneyRaw(r.outflow),
+      moneyRaw(r.cumSavings),
+      moneyRaw(r.cumTotal),
+      r.type,
+      r.note
+    ].map(x => '"' + String(x).replace(/"/g,'""') + '"').join(';')));
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'tasarruf_finansman_odeme_plani.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  $('calcBtn').addEventListener('click', calc);
+  $('increaseMode').addEventListener('change', calc);
+  $('sampleCarInc').addEventListener('click', () => setSample('carInc'));
+  $('sampleCarFlat').addEventListener('click', () => setSample('carFlat'));
+  $('sampleHomeInc').addEventListener('click', () => setSample('homeInc'));
+  $('printBtn').addEventListener('click', () => window.print());
+  $('csvBtn').addEventListener('click', csvDownload);
+  document.querySelectorAll('input, select').forEach(el => el.addEventListener('blur', calc));
+
+  const today = new Date();
+  $('startDate').value = today.toISOString().slice(0,10);
+  calc();
+})();
+</script>
+</body>
+</html>
