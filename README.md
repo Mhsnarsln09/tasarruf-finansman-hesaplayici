@@ -34,4 +34,3 @@ Organizasyon ücreti peşin tahsil edilebilir veya şirket tarifesine göre taks
 ## Lisans
 
 MIT
-# tasarruf-finansman-hesaplayici
