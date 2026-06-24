@@ -303,7 +303,7 @@
           <div class="field">
             <label for="monthlyPayment">İlk aylık ödeme <span>boş bırakılabilir</span></label>
             <input id="monthlyPayment" inputmode="decimal" placeholder="Otomatik hesaplansın" />
-            <div class="hint">Boş kalırsa PDF örnekleriyle uyumlu bir ilk taksit tahmini kullanılır. Girerseniz plan tamamen bu tutar üzerinden kurulur.</div>
+            <div class="hint">Boş kalırsa en iyi senaryoya göre aylık ödeme otomatik hesaplanır. Girerseniz plan tamamen bu tutar üzerinden kurulur.</div>
           </div>
 
           <div class="row2">
@@ -607,7 +607,7 @@
   function renderWarnings(warnings, autoUsed, autoAmount) {
     let html = '';
     if (autoUsed) {
-      html += `<div class="notice ok"><b>Otomatik aylık ödeme kullanıldı:</b> ${money(autoAmount)}. Bu tutar, yüklenen teklif PDF’lerindeki örnek oranlara benzetilerek oluşturulmuş tahmini bir değerdir.</div>`;
+      html += `<div class="notice ok"><b>Otomatik aylık ödeme kullanıldı:</b> ${money(autoAmount)}. Bu tutar, en iyi senaryo teslim hedefi için otomatik hesaplandı.</div>`;
     }
     html += `<div class="notice"><b>Finansal okuryazarlık uyarısı:</b> Organizasyon ücreti peşin tahsil edilebilir veya şirket tarifesine göre taksitlendirilebilir. Bu ücret tahsisata esas tasarruf birikimi gibi değerlendirilmemelidir.</div>`;
     html += warnings.map(w => `<div class="notice ${w.type === 'danger' ? 'danger' : ''}">${w.text}</div>`).join('');
@@ -629,7 +629,7 @@
     $('scenarios').innerHTML = `
       <div class="box">
         <h3>En iyi senaryo</h3>
-        <p>Ödemeler vadesinde yapılır, peşinat indirimi uygulanır, %40 tasarruf ve 150 gün/5 ödeme koşulu sağlanır. Bu durumda tahmini teslim/tahsisat: <b>${s.bestDeliveryMonth}. ay</b>.</p>
+        <p>Aylık ödeme boş bırakılırsa sistem bu senaryoyu hedefleyerek otomatik hesaplama yapar. Ödemeler vadesinde yapılır, peşinat indirimi uygulanır, %40 tasarruf ve 150 gün/5 ödeme koşulu sağlanır. Tahmini teslim/tahsisat: <b>${s.bestDeliveryMonth}. ay</b>.</p>
       </div>
       <div class="box">
         <h3>En kötü senaryo</h3>
