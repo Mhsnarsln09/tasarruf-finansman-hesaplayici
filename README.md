@@ -22,7 +22,7 @@ Bu proje tek dosyalık statik bir uygulamadır. Bilgisayarında çalıştırmak 
 Sonra tarayıcıdan şu adresi aç:
 
 ```text
-https://mhsnarsln09.github.io/tasarruf-finansman-hesaplayici/
+https://tasarruf-finansman-hesaplayici.vercel.app/
 ```
 
 ## Önemli uyarı
