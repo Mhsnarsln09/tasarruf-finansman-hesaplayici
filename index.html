@@ -213,13 +213,27 @@
       tbody td::before { flex-basis: 44%; }
     }
     @media print {
+      @page { size: A4 landscape; margin: 10mm; }
       body { background: white; }
       .wrap { max-width: none; padding: 0; }
       .hero, .input-card, .buttons, details { display: none !important; }
       .card { border: 0; box-shadow: none; }
       .table-wrap { max-height: none; overflow: visible; }
-      thead th { position: static; }
-      table { min-width: 0; font-size: 10px; }
+      table { display: table; width: 100%; min-width: 0; table-layout: fixed; font-size: 9px; }
+      thead { display: table-header-group; }
+      tbody { display: table-row-group; }
+      tbody tr { display: table-row; margin: 0; border: 0; border-radius: 0; overflow: visible; }
+      thead th, tbody td {
+        display: table-cell;
+        padding: 5px 4px;
+        border-bottom: 1px solid #d8dee9;
+        white-space: normal;
+        text-align: left;
+        vertical-align: top;
+      }
+      thead th { position: static; background: #f8fafc; }
+      tbody td::before { content: none; }
+      .pill { padding: 0; background: transparent; color: inherit; font-size: inherit; font-weight: 700; }
     }
   </style>
 </head>
