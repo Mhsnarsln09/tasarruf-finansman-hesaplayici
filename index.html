@@ -175,12 +175,35 @@
       tbody { display: block; }
       tbody tr {
         display: block;
+        position: relative;
         margin: 0 0 12px;
+        padding-bottom: 34px;
         border: 1px solid #e4e7ec;
         border-radius: 14px;
         background: #fff;
         overflow: hidden;
+        cursor: pointer;
       }
+      tbody tr:not(.expanded) td:nth-child(4),
+      tbody tr:not(.expanded) td:nth-child(5),
+      tbody tr:not(.expanded) td:nth-child(6),
+      tbody tr:not(.expanded) td:nth-child(n+8) {
+        display: none;
+      }
+      tbody tr::after {
+        content: "Detayları aç";
+        position: absolute;
+        left: 12px;
+        right: 12px;
+        bottom: 8px;
+        padding-top: 8px;
+        border-top: 1px solid #eef2f7;
+        color: #0f766e;
+        font-size: 12px;
+        font-weight: 800;
+        text-align: center;
+      }
+      tbody tr.expanded::after { content: "Detayları kapat"; }
       tbody tr.hash { background: #fbfcfe; }
       tbody tr.delivery-best { background: #ecfdfd; border-color: #8be5df; }
       tbody tr.delivery-worst { background: #fff7ed; border-color: #ffd8a8; }
@@ -223,6 +246,7 @@
       thead { display: table-header-group; }
       tbody { display: table-row-group; }
       tbody tr { display: table-row; margin: 0; border: 0; border-radius: 0; overflow: visible; }
+      tbody tr::after { content: none; }
       thead th, tbody td {
         display: table-cell;
         padding: 5px 4px;
@@ -618,7 +642,7 @@
     tbody.innerHTML = rows.map(r => {
       const cls = r.period === '#' ? 'hash' : r.period === best ? 'delivery-best' : r.period === worst ? 'delivery-worst' : '';
       const note = r.note ? (r.period === best ? `<span class="pill">${r.note}</span>` : `<span class="pill warn">${r.note}</span>`) : '';
-      return `<tr class="${cls}">
+      return `<tr class="${cls}" tabindex="0" aria-expanded="false">
         <td data-label="Dönem">${r.period}</td>
         <td data-label="Taksit tarihi">${dateTR(r.date)}</td>
         <td data-label="Tasarruf / finansman ödemesi">${money(r.savePay)}</td>
@@ -705,6 +729,20 @@
   $('printBtn').addEventListener('click', () => window.print());
   $('csvBtn').addEventListener('click', csvDownload);
   document.querySelectorAll('input, select').forEach(el => el.addEventListener('blur', calc));
+  tbody.addEventListener('click', (event) => {
+    if (!window.matchMedia('(max-width: 720px)').matches) return;
+    const row = event.target.closest('tr');
+    if (!row) return;
+    const expanded = row.classList.toggle('expanded');
+    row.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+  });
+  tbody.addEventListener('keydown', (event) => {
+    if (!window.matchMedia('(max-width: 720px)').matches || !['Enter', ' '].includes(event.key)) return;
+    const row = event.target.closest('tr');
+    if (!row) return;
+    event.preventDefault();
+    row.click();
+  });
 
   const today = new Date();
   $('startDate').value = today.toISOString().slice(0,10);
