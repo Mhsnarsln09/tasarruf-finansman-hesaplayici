@@ -27,7 +27,7 @@
       background: var(--bg);
       color: var(--ink);
     }
-    .wrap { max-width: 1280px; margin: 0 auto; padding: 26px; }
+    .wrap { width: 100%; max-width: 1280px; margin: 0 auto; padding: 26px; }
     .hero {
       background: linear-gradient(135deg, #0f766e, #0ea5a4 55%, #22c7c4);
       color: white;
@@ -49,7 +49,8 @@
     }
     .hero h1 { margin: 0 0 10px; font-size: clamp(28px, 4vw, 46px); letter-spacing: -.03em; }
     .hero p { margin: 0; max-width: 920px; color: rgba(255,255,255,.92); line-height: 1.5; }
-    .grid { display: grid; grid-template-columns: 410px 1fr; gap: 20px; margin-top: 20px; align-items: start; }
+    .grid { display: grid; grid-template-columns: 410px minmax(0, 1fr); gap: 20px; margin-top: 20px; align-items: start; min-width: 0; }
+    .grid > * { min-width: 0; }
     .card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
     .card h2 { margin: 0; font-size: 20px; }
     .card .head { padding: 20px 20px 10px; display: flex; justify-content: space-between; gap: 12px; align-items: center; }
@@ -117,7 +118,7 @@
     summary { cursor: pointer; color: #0f766e; font-weight: 800; }
     @media (max-width: 1100px) {
       .wrap { padding: 20px; }
-      .grid { grid-template-columns: 380px 1fr; gap: 16px; }
+      .grid { grid-template-columns: 380px minmax(0, 1fr); gap: 16px; }
       .metrics { grid-template-columns: repeat(2, 1fr); }
     }
     @media (max-width: 980px) {
@@ -390,12 +391,14 @@
     if (!s) return 0;
     const lastComma = s.lastIndexOf(',');
     const lastDot = s.lastIndexOf('.');
-    if (lastComma > lastDot) {
+    if (lastComma >= 0 && lastComma > lastDot) {
       s = s.replace(/\./g, '').replace(',', '.');
+    } else if (lastDot >= 0) {
+      const parts = s.split('.');
+      const hasThousandsDots = parts.length > 1 && parts.slice(1).every(part => /^\d{3}$/.test(part));
+      s = hasThousandsDots ? parts.join('') : s.replace(/,/g, '');
     } else {
       s = s.replace(/,/g, '');
-      const parts = s.split('.');
-      if (parts.length > 2) s = parts.join('');
     }
     const n = Number(s);
     return Number.isFinite(n) ? n : 0;
