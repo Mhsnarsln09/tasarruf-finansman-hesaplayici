@@ -7,6 +7,8 @@ Türkiye'deki tasarruf finansman teklif örneklerine göre hazırlanmış, mobil
 - Plan / tasarruf tutarı girişi
 - Peşinat girişi
 - Aylık ödeme girişi veya otomatik aylık ödeme tahmini
+- Kullanıcının belirlediği ay sayısına göre sabit vadeli plan oluşturma
+- Sayısal alanlarda otomatik Türkçe binlik ayırıcı maskesi
 - Artışlı / artışsız ödeme planı seçimi
 - Organizasyon ücreti hesaplama
 - En iyi ve en kötü senaryo teslim / tahsisat ayı gösterimi

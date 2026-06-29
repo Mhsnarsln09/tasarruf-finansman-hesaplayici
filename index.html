@@ -116,6 +116,29 @@
     .scenario .box p { margin: 0; color: #475467; line-height: 1.45; font-size: 13px; }
     details { margin-top: 10px; }
     summary { cursor: pointer; color: #0f766e; font-weight: 800; }
+    .advanced-settings {
+      margin: 4px 0 16px;
+      border: 1px solid #d8dee9;
+      border-radius: 14px;
+      background: #f8fafc;
+      overflow: hidden;
+    }
+    .advanced-settings > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 14px;
+      list-style: none;
+      user-select: none;
+    }
+    .advanced-settings > summary::-webkit-details-marker { display: none; }
+    .advanced-settings > summary::after { content: "+"; font-size: 20px; line-height: 1; }
+    .advanced-settings[open] > summary::after { content: "−"; }
+    .advanced-settings[open] > summary { border-bottom: 1px solid #d8dee9; }
+    .advanced-content { padding: 14px 14px 0; background: white; }
+    .advanced-content .row2,
+    .advanced-content .row3 { grid-template-columns: 1fr; gap: 0; }
     @media (max-width: 1100px) {
       .wrap { padding: 20px; }
       .grid { grid-template-columns: 380px minmax(0, 1fr); gap: 16px; }
@@ -292,67 +315,78 @@
 
           <div class="field">
             <label for="targetAmount">Plan / tasarruf tutarı <span>TL</span></label>
-            <input id="targetAmount" inputmode="decimal" value="2.000.000" />
+            <input id="targetAmount" inputmode="numeric" data-number-format="money" value="2.000.000" />
           </div>
 
           <div class="field">
             <label for="downPayment">Peşinat <span>boşsa 0 kabul edilir</span></label>
-            <input id="downPayment" inputmode="decimal" value="400.000" />
+            <input id="downPayment" inputmode="numeric" data-number-format="money" value="400.000" />
           </div>
 
           <div class="field">
             <label for="monthlyPayment">İlk aylık ödeme <span>boş bırakılabilir</span></label>
-            <input id="monthlyPayment" inputmode="decimal" placeholder="Otomatik hesaplansın" />
-            <div class="hint">Boş kalırsa en iyi senaryoya göre aylık ödeme otomatik hesaplanır. Girerseniz plan tamamen bu tutar üzerinden kurulur.</div>
+            <input id="monthlyPayment" inputmode="numeric" data-number-format="money" placeholder="Otomatik hesaplansın" />
+            <div class="hint">Boş kalırsa en iyi senaryoya göre aylık ödeme otomatik hesaplanır.</div>
           </div>
 
-          <div class="row2">
-            <div class="field">
-              <label for="increaseMode">Artış seçimi</label>
-              <select id="increaseMode">
-                <option value="20">Artışlı - yıllık %20</option>
-                <option value="0">Artışsız - %0</option>
-                <option value="custom">Özel oran</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="customIncrease">Yıllık artış oranı <span>%</span></label>
-              <input id="customIncrease" inputmode="decimal" value="20" />
-            </div>
-          </div>
+          <details class="advanced-settings">
+            <summary>Gelişmiş ayarlar</summary>
+            <div class="advanced-content">
+              <div class="field">
+                <label for="planTerm">Plan süresi <span>ay</span></label>
+                <input id="planTerm" inputmode="numeric" data-number-format="integer" value="0" maxlength="3" />
+                <div class="hint">0 ise aylık ödeme akışı kullanılır. 0'dan büyükse seçilen ay sayısı öncelik kazanır ve aylık ödeme buna göre hesaplanır.</div>
+              </div>
 
-          <div class="row3">
-            <div class="field">
-              <label for="orgFeeRate">Organizasyon ücreti <span>%</span></label>
-              <input id="orgFeeRate" inputmode="decimal" value="7" />
-            </div>
-            <div class="field">
-              <label for="paymentDay">Aylık ödeme günü</label>
-              <input id="paymentDay" type="number" min="1" max="28" value="10" />
-            </div>
-            <div class="field">
-              <label for="finalMultiplier">Son taksit esneme</label>
-              <select id="finalMultiplier">
-                <option value="2">PDF uyumlu: max 2x</option>
-                <option value="1">Esnetme yok</option>
-                <option value="3">Max 3x</option>
-              </select>
-            </div>
-          </div>
+              <div class="row2">
+                <div class="field">
+                  <label for="increaseMode">Artış seçimi</label>
+                  <select id="increaseMode">
+                    <option value="20">Artışlı - yıllık %20</option>
+                    <option value="0">Artışsız - %0</option>
+                    <option value="custom">Özel oran</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="customIncrease">Yıllık artış oranı <span>%</span></label>
+                  <input id="customIncrease" inputmode="decimal" data-number-format="decimal" value="20" />
+                </div>
+              </div>
 
-          <div class="row2">
-            <div class="field">
-              <label for="orgMode">Org. ücreti tahsilatı</label>
-              <select id="orgMode">
-                <option value="pesin">Peşin</option>
-                <option value="taksitli">Taksitli</option>
-              </select>
+              <div class="row3">
+                <div class="field">
+                  <label for="orgFeeRate">Organizasyon ücreti <span>%</span></label>
+                  <input id="orgFeeRate" inputmode="decimal" data-number-format="decimal" value="7" />
+                </div>
+                <div class="field">
+                  <label for="paymentDay">Aylık ödeme günü</label>
+                  <input id="paymentDay" inputmode="numeric" data-number-format="integer" value="10" maxlength="2" />
+                </div>
+                <div class="field">
+                  <label for="finalMultiplier">Son taksit esneme</label>
+                  <select id="finalMultiplier">
+                    <option value="2">PDF uyumlu: max 2x</option>
+                    <option value="1">Esnetme yok</option>
+                    <option value="3">Max 3x</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="row2">
+                <div class="field">
+                  <label for="orgMode">Org. ücreti tahsilatı</label>
+                  <select id="orgMode">
+                    <option value="pesin">Peşin</option>
+                    <option value="taksitli">Taksitli</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <label for="orgInstallments">Org. taksit sayısı</label>
+                  <input id="orgInstallments" inputmode="numeric" data-number-format="integer" value="12" maxlength="2" />
+                </div>
+              </div>
             </div>
-            <div class="field">
-              <label for="orgInstallments">Org. taksit sayısı</label>
-              <input id="orgInstallments" type="number" min="1" max="60" value="12" />
-            </div>
-          </div>
+          </details>
 
           <div class="buttons">
             <button id="calcBtn">Planı hesapla</button>
@@ -365,7 +399,7 @@
             <summary>Hesap mantığı</summary>
             <div class="footer-notes">
               <p><b>Organizasyon ücreti:</b> varsayılan olarak hedef tutarın %7’si alınır. Bu oran, yüklenen 2.000.000 TL ve 2.500.000 TL örneklerinde 140.000 TL ve 175.000 TL olarak görülür.</p>
-              <p><b>Teslim/tahsisat ayı:</b> müşteri bazlı planlarda asgari %40 tasarruf, sözleşme süresinin %40’ı, peşinat indirimi, 150 gün ve 5 ödeme koşulu birlikte değerlendirilir. Ara dönem ödemeleri teslimi öne çekmek için kullanılmaz.</p>
+              <p><b>Teslim/tahsisat ayı:</b> müşteri bazlı planlarda asgari %40 tasarruf, sözleşme süresinin yukarı yuvarlanan %40’ı, peşinat indirimi, 150 gün ve 5 ödeme koşulu birlikte değerlendirilir. Ara dönem ödemeleri teslimi öne çekmek için kullanılmaz.</p>
               <p><b>Vade:</b> aylık ödeme dizisi hedef tutardan peşinat düşülerek hesaplanır. Artışlı planda taksit her 12 ayda bir seçilen oran kadar artar. Son ay, PDF örneklerinde görülen şekilde kalan bakiyeyi kapatacak final taksiti olabilir.</p>
             </div>
           </details>
@@ -442,6 +476,28 @@
     return Number.isFinite(n) ? n : 0;
   }
 
+  function formatNumericInput(input) {
+    const format = input.dataset.numberFormat;
+    if (!format) return;
+
+    if (format === 'decimal') {
+      const normalized = input.value.replace(/\./g, ',').replace(/[^0-9,]/g, '');
+      const commaIndex = normalized.indexOf(',');
+      input.value = commaIndex < 0
+        ? normalized
+        : normalized.slice(0, commaIndex + 1) + normalized.slice(commaIndex + 1).replace(/,/g, '');
+      return;
+    }
+
+    let digits = input.value.replace(/\D/g, '');
+    if (format === 'money') {
+      digits = digits.replace(/^0+(?=\d)/, '');
+      input.value = digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+      return;
+    }
+    input.value = digits;
+  }
+
   function money(n) {
     return new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 }).format(Math.round(n)) + ' TL';
   }
@@ -481,6 +537,15 @@
     return round1000(target * baseRatio);
   }
 
+  function monthlyForTerm(remaining, annualIncrease, term) {
+    let factorTotal = 0;
+    for (let period = 1; period <= term; period += 1) {
+      const yearIndex = Math.floor((period - 1) / 12);
+      factorTotal += Math.pow(1 + annualIncrease, yearIndex);
+    }
+    return factorTotal > 0 ? remaining / factorTotal : 0;
+  }
+
   function getAnnualIncrease() {
     const mode = $('increaseMode').value;
     if (mode === 'custom') return parseNum($('customIncrease').value) / 100;
@@ -500,10 +565,14 @@
     const orgFee = round100(target * orgRate);
     const annualIncrease = getAnnualIncrease();
     const monthlyInput = parseNum($('monthlyPayment').value);
-    const firstMonthly = monthlyInput > 0 ? monthlyInput : autoMonthly(target, down, annualIncrease);
+    const requestedTerm = Math.max(0, Math.min(240, Math.trunc(parseNum($('planTerm').value))));
+    const remainingAtStart = Math.max(0, target - down);
+    const firstMonthly = requestedTerm > 0
+      ? monthlyForTerm(remainingAtStart, annualIncrease, requestedTerm)
+      : monthlyInput > 0 ? monthlyInput : autoMonthly(target, down, annualIncrease);
     const finalMultiplier = Number($('finalMultiplier').value || 2);
     const orgMode = $('orgMode').value;
-    const orgInstallments = Math.max(1, Number($('orgInstallments').value || 12));
+    const orgInstallments = Math.max(1, Math.min(60, Number($('orgInstallments').value || 12)));
     const paymentDay = Math.max(1, Math.min(28, Number($('paymentDay').value || 10)));
     const startValue = $('startDate').value || new Date().toISOString().slice(0,10);
     const start = new Date(startValue + 'T12:00:00');
@@ -513,6 +582,8 @@
     if (target <= 0) warnings.push({type: 'danger', text: 'Plan / tasarruf tutarı sıfırdan büyük olmalıdır.'});
     if (down < 0) warnings.push({type: 'danger', text: 'Peşinat negatif olamaz.'});
     if (firstMonthly <= 0) warnings.push({type: 'danger', text: 'Aylık ödeme sıfırdan büyük olmalıdır.'});
+    if (parseNum($('planTerm').value) > 240) warnings.push({type: 'warn', text: 'Plan süresi en fazla 240 ay olabilir; hesaplama 240 ay üzerinden yapıldı.'});
+    if (requestedTerm > 0 && monthlyInput > 0) warnings.push({type: 'warn', text: 'Plan süresi girildiği için aylık ödeme tutarı yerine seçilen vade öncelikli olarak kullanıldı.'});
     if (orgRate < 0 || orgRate > .25) warnings.push({type: 'warn', text: 'Organizasyon ücreti oranı kontrol edilmeli. Örnek PDF’lerde oran %7’dir; şirket tarifesine göre değişebilir.'});
     if (down > target * .75) warnings.push({type: 'warn', text: 'Peşinat hedef tutarın çok yüksek bir kısmı. Teslim ayı, 150 gün ve 5 ödeme koşulu nedeniyle yine de erkene çekilemeyebilir.'});
 
@@ -533,16 +604,19 @@
       rows.push({ period: '#', date: start, savePay: down, orgPay: 0, outflow: down, cumSavings: down, cumTotal: cumulativeTotal, type: product + ' Planı Peşinatı', note: 'Peşinat, teslim ayı hesabında dikkate alınır' });
     }
 
-    while (remaining > 0.5 && safety < 240) {
+    const periodLimit = requestedTerm > 0 ? requestedTerm : 240;
+    while (remaining > 0.5 && safety < periodLimit) {
       period += 1;
       safety += 1;
       const yearIndex = Math.floor((period - 1) / 12);
-      const regular = round100(firstMonthly * Math.pow(1 + annualIncrease, yearIndex));
+      const regular = firstMonthly * Math.pow(1 + annualIncrease, yearIndex);
       let savePay;
-      if (remaining <= regular * finalMultiplier) {
+      if (requestedTerm > 0 && period === requestedTerm) {
+        savePay = remaining;
+      } else if (requestedTerm === 0 && remaining <= regular * finalMultiplier) {
         savePay = remaining;
       } else {
-        savePay = regular;
+        savePay = Math.min(regular, remaining);
       }
       const orgPay = orgMode === 'taksitli' && period <= orgInstallments ? orgPerPeriod : 0;
       remaining -= savePay;
@@ -561,7 +635,7 @@
       });
     }
 
-    if (safety >= 240) warnings.push({type: 'danger', text: 'Bu aylık ödeme ile vade 240 ayı aşıyor. Plan gerçekçi olmayabilir.'});
+    if (requestedTerm === 0 && safety >= 240 && remaining > 0.5) warnings.push({type: 'danger', text: 'Bu aylık ödeme ile vade 240 ayı aşıyor. Plan gerçekçi olmayabilir.'});
 
     const term = period;
     const fortySavings = target * .40;
@@ -597,16 +671,18 @@
     lastRows = rows;
     lastSummary = { target, down, orgFee, firstMonthly: firstMonthlyActual, totalFirstPayment, totalCost, term, bestDeliveryMonth, worstDeliveryMonth, bestDate, worstDate, annualIncrease, orgMode, orgInstallments };
 
-    renderWarnings(warnings, monthlyInput <= 0, firstMonthly);
+    renderWarnings(warnings, monthlyInput <= 0, firstMonthly, requestedTerm);
     renderMetrics(lastSummary);
     renderScenarios(lastSummary);
     renderTable(rows, bestDeliveryMonth, worstDeliveryMonth);
     $('statusTab').textContent = product + ' | Y.A. ' + pct(annualIncrease * 100) + ' | T.A. %0';
   }
 
-  function renderWarnings(warnings, autoUsed, autoAmount) {
+  function renderWarnings(warnings, autoUsed, autoAmount, requestedTerm) {
     let html = '';
-    if (autoUsed) {
+    if (requestedTerm > 0) {
+      html += `<div class="notice ok"><b>${requestedTerm} aylık plan oluşturuldu:</b> İlk aylık ödeme ${money(autoAmount)} olarak hesaplandı ve plan tam ${requestedTerm} ayda kapatıldı.</div>`;
+    } else if (autoUsed) {
       html += `<div class="notice ok"><b>Otomatik aylık ödeme kullanıldı:</b> ${money(autoAmount)}. Bu tutar, en iyi senaryo teslim hedefi için otomatik hesaplandı.</div>`;
     }
     html += `<div class="notice"><b>Finansal okuryazarlık uyarısı:</b> Organizasyon ücreti peşin tahsil edilebilir veya şirket tarifesine göre taksitlendirilebilir. Bu ücret tahsisata esas tasarruf birikimi gibi değerlendirilmemelidir.</div>`;
@@ -629,11 +705,11 @@
     $('scenarios').innerHTML = `
       <div class="box">
         <h3>En iyi senaryo</h3>
-        <p>Aylık ödeme boş bırakılırsa sistem bu senaryoyu hedefleyerek otomatik hesaplama yapar. Ödemeler vadesinde yapılır, peşinat indirimi uygulanır, %40 tasarruf ve 150 gün/5 ödeme koşulu sağlanır. Tahmini teslim/tahsisat: <b>${s.bestDeliveryMonth}. ay</b>.</p>
+        <p>Aylık ödeme boş bırakılırsa sistem bu senaryoyu hedefleyerek otomatik hesaplama yapar. Ödemeler vadesinde yapılır; peşinat indirimi, %40 tasarruf ve 150 gün/5 ödeme koşulu sağlanır. Tahmini teslim/tahsisat: <b>${s.bestDeliveryMonth}. ay</b>.</p>
       </div>
       <div class="box">
         <h3>En kötü senaryo</h3>
-        <p>Peşinatın süreyi öne çekme etkisi uygulanmaz veya sözleşme/ödeme performansı nedeniyle azami çerçeve dikkate alınır. Bu durumda tahmini teslim/tahsisat: <b>${s.worstDeliveryMonth}. ay</b>.</p>
+        <p>Peşinatın süreyi öne çekme etkisi uygulanmaz veya sözleşme/ödeme performansı nedeniyle azami çerçeve dikkate alınır. Vadenin %40’ı yukarı yuvarlanır. Bu durumda tahmini teslim/tahsisat: <b>${s.worstDeliveryMonth}. ay</b>.</p>
       </div>
     `;
   }
@@ -663,6 +739,7 @@
       $('targetAmount').value = '2.000.000';
       $('downPayment').value = '400.000';
       $('monthlyPayment').value = '80.000';
+      $('planTerm').value = '0';
       $('increaseMode').value = '20';
       $('customIncrease').value = '20';
       $('paymentDay').value = '10';
@@ -676,6 +753,7 @@
       $('targetAmount').value = '2.000.000';
       $('downPayment').value = '400.000';
       $('monthlyPayment').value = '85.000';
+      $('planTerm').value = '0';
       $('increaseMode').value = '0';
       $('customIncrease').value = '0';
       $('paymentDay').value = '10';
@@ -689,6 +767,7 @@
       $('targetAmount').value = '2.500.000';
       $('downPayment').value = '1.000.000';
       $('monthlyPayment').value = '40.000';
+      $('planTerm').value = '0';
       $('increaseMode').value = '20';
       $('customIncrease').value = '20';
       $('paymentDay').value = '20';
@@ -728,6 +807,10 @@
   $('sampleHomeInc').addEventListener('click', () => setSample('homeInc'));
   $('printBtn').addEventListener('click', () => window.print());
   $('csvBtn').addEventListener('click', csvDownload);
+  document.querySelectorAll('input[data-number-format]').forEach(input => {
+    input.addEventListener('input', () => formatNumericInput(input));
+    formatNumericInput(input);
+  });
   document.querySelectorAll('input, select').forEach(el => el.addEventListener('blur', calc));
   tbody.addEventListener('click', (event) => {
     if (!window.matchMedia('(max-width: 720px)').matches) return;
