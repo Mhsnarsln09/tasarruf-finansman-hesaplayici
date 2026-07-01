@@ -33,6 +33,8 @@ Bu uygulama, örnek teklif PDF'lerindeki oran ve ödeme planı mantığına gör
 
 Organizasyon ücreti peşin tahsil edilebilir veya şirket tarifesine göre taksitlendirilebilir. Bu ücret, tasarruf birikimi gibi değerlendirilmemelidir.
 
+Hesaplamada BDDK'nın 25.06.2026 tarihli ve 11482 sayılı Kararı uyarınca müşteri bazlı sözleşmeler için %45 tutar/süre sınırı, 180 günlük asgari tasarruf dönemi ve peşinat hariç en düşük taksidin en yüksek taksidin üçte birinden az olmaması koşulu uygulanır.
+
 ## Lisans
 
 MIT

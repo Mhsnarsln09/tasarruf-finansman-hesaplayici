@@ -365,9 +365,9 @@
                 <div class="field">
                   <label for="finalMultiplier">Son taksit esneme</label>
                   <select id="finalMultiplier">
-                    <option value="2">PDF uyumlu: max 2x</option>
+                    <option value="2">Son taksit: max 2x</option>
                     <option value="1">Esnetme yok</option>
-                    <option value="3">Max 3x</option>
+                    <option value="3">Mevzuat sınırı: max 3x</option>
                   </select>
                 </div>
               </div>
@@ -399,8 +399,8 @@
             <summary>Hesap mantığı</summary>
             <div class="footer-notes">
               <p><b>Organizasyon ücreti:</b> varsayılan olarak hedef tutarın %7’si alınır. Bu oran, yüklenen 2.000.000 TL ve 2.500.000 TL örneklerinde 140.000 TL ve 175.000 TL olarak görülür.</p>
-              <p><b>Teslim/tahsisat ayı:</b> müşteri bazlı planlarda asgari %40 tasarruf, sözleşme süresinin yukarı yuvarlanan %40’ı, peşinat indirimi, 150 gün ve 5 ödeme koşulu birlikte değerlendirilir. Ara dönem ödemeleri teslimi öne çekmek için kullanılmaz.</p>
-              <p><b>Vade:</b> aylık ödeme dizisi hedef tutardan peşinat düşülerek hesaplanır. Artışlı planda taksit her 12 ayda bir seçilen oran kadar artar. Son ay, PDF örneklerinde görülen şekilde kalan bakiyeyi kapatacak final taksiti olabilir.</p>
+              <p><b>Teslim/tahsisat ayı:</b> müşteri bazlı planlarda asgari %45 tasarruf, sözleşme süresinin yukarı yuvarlanan %45’i, peşinat indirimi ve 180 günlük asgari süre birlikte değerlendirilir. Ara dönem ödemeleri teslimi öne çekmek için kullanılmaz.</p>
+              <p><b>Vade:</b> aylık ödeme dizisi hedef tutardan peşinat düşülerek hesaplanır. Artışlı planda taksit her 12 ayda bir seçilen oran kadar artar. Peşinat hariç en düşük taksit, en yüksek taksidin üçte birinden az olamaz.</p>
             </div>
           </details>
         </div>
@@ -442,7 +442,7 @@
           <div class="footer-notes">
             <p><b>Uyarı:</b> Bu hesaplama, şirketlerin sunduğu tip sözleşme örnekleri ve BDDK'nın belirlediği genel çerçeveye dayanmaktadır. Nihai teslimat tarihi, şirketle imzalayacağınız sözleşmeye ve ödeme performansınıza bağlı olarak değişiklik gösterebilir.</p>
             <p>Bu ekran garanti teslimat tarihi vermez; şirketin likidite yönetimi, tarife, sözleşme şartları, ödeme gecikmesi, teminat/değerleme süreçleri ve mevzuat değişiklikleri sonucu tarih değişebilir.</p>
-            <p><b>Mevzuat referansı:</b> 6361 sayılı Kanun m. 39/A ve 39/B; Tasarruf Finansman Şirketlerinin Kuruluş ve Faaliyet Esasları Hakkında Yönetmelik m. 16, 17, 21, 22, 28 ve 29.</p>
+            <p><b>Mevzuat referansı:</b> 6361 sayılı Kanun m. 39/A ve 39/B; Tasarruf Finansman Şirketlerinin Kuruluş ve Faaliyet Esasları Hakkında Yönetmelik m. 16, 17, 21, 22, 28 ve 29; BDDK’nın 25.06.2026 tarihli ve 11482 sayılı Kararı.</p>
           </div>
         </div>
       </section>
@@ -451,6 +451,9 @@
 
 <script>
 (function() {
+  const DELIVERY_RATIO = 0.45;
+  const MIN_SAVING_DAYS = 180;
+  const MAX_INSTALLMENT_RATIO = 3;
   const $ = (id) => document.getElementById(id);
   const tbody = document.querySelector('#planTable tbody');
   let lastRows = [];
@@ -521,6 +524,12 @@
     return d;
   }
 
+  function addDays(date, days) {
+    const d = new Date(date);
+    d.setDate(d.getDate() + days);
+    return d;
+  }
+
   function round100(n) {
     return Math.round(n / 100) * 100;
   }
@@ -541,9 +550,39 @@
     let factorTotal = 0;
     for (let period = 1; period <= term; period += 1) {
       const yearIndex = Math.floor((period - 1) / 12);
-      factorTotal += Math.pow(1 + annualIncrease, yearIndex);
+      factorTotal += Math.min(Math.pow(1 + annualIncrease, yearIndex), MAX_INSTALLMENT_RATIO);
     }
     return factorTotal > 0 ? remaining / factorTotal : 0;
+  }
+
+  function rebalanceInstallments(rows, amount, annualIncrease) {
+    const installmentRows = rows.filter(r => typeof r.period === 'number');
+    if (!installmentRows.length || amount <= 0) return false;
+
+    const payments = installmentRows.map(r => r.savePay).filter(v => v > 0);
+    const minPayment = Math.min(...payments);
+    const maxPayment = Math.max(...payments);
+    if (minPayment + 0.01 >= maxPayment / MAX_INSTALLMENT_RATIO) return false;
+
+    const weights = installmentRows.map(r => {
+      const yearIndex = Math.floor((r.period - 1) / 12);
+      return Math.min(Math.pow(1 + annualIncrease, yearIndex), MAX_INSTALLMENT_RATIO);
+    });
+    const weightTotal = weights.reduce((sum, weight) => sum + weight, 0);
+    installmentRows.forEach((row, index) => {
+      row.savePay = amount * weights[index] / weightTotal;
+      row.outflow = row.savePay + row.orgPay;
+    });
+
+    let cumulativeSavings = 0;
+    let cumulativeTotal = 0;
+    rows.forEach(row => {
+      cumulativeSavings += row.savePay;
+      cumulativeTotal += row.outflow;
+      row.cumSavings = cumulativeSavings;
+      row.cumTotal = cumulativeTotal;
+    });
+    return true;
   }
 
   function getAnnualIncrease() {
@@ -585,7 +624,7 @@
     if (parseNum($('planTerm').value) > 240) warnings.push({type: 'warn', text: 'Plan süresi en fazla 240 ay olabilir; hesaplama 240 ay üzerinden yapıldı.'});
     if (requestedTerm > 0 && monthlyInput > 0) warnings.push({type: 'warn', text: 'Plan süresi girildiği için aylık ödeme tutarı yerine seçilen vade öncelikli olarak kullanıldı.'});
     if (orgRate < 0 || orgRate > .25) warnings.push({type: 'warn', text: 'Organizasyon ücreti oranı kontrol edilmeli. Örnek PDF’lerde oran %7’dir; şirket tarifesine göre değişebilir.'});
-    if (down > target * .75) warnings.push({type: 'warn', text: 'Peşinat hedef tutarın çok yüksek bir kısmı. Teslim ayı, 150 gün ve 5 ödeme koşulu nedeniyle yine de erkene çekilemeyebilir.'});
+    if (down > target * .75) warnings.push({type: 'warn', text: 'Peşinat hedef tutarın çok yüksek bir kısmı. Teslim ayı, 180 günlük asgari süre nedeniyle yine de erkene çekilemeyebilir.'});
 
     let remaining = Math.max(0, target - down);
     const rows = [];
@@ -609,7 +648,8 @@
       period += 1;
       safety += 1;
       const yearIndex = Math.floor((period - 1) / 12);
-      const regular = firstMonthly * Math.pow(1 + annualIncrease, yearIndex);
+      const uncappedRegular = firstMonthly * Math.pow(1 + annualIncrease, yearIndex);
+      const regular = Math.min(uncappedRegular, firstMonthly * MAX_INSTALLMENT_RATIO);
       let savePay;
       if (requestedTerm > 0 && period === requestedTerm) {
         savePay = remaining;
@@ -637,15 +677,27 @@
 
     if (requestedTerm === 0 && safety >= 240 && remaining > 0.5) warnings.push({type: 'danger', text: 'Bu aylık ödeme ile vade 240 ayı aşıyor. Plan gerçekçi olmayabilir.'});
 
+    if (rebalanceInstallments(rows, remainingAtStart, annualIncrease)) {
+      warnings.push({type: 'warn', text: 'Son taksit mevzuattaki 1/3 oranının altında kalacağı için taksitler, toplam tutar ve vade korunarak yeniden dengelendi.'});
+    }
+
     const term = period;
-    const fortySavings = target * .40;
-    let savingsMonth = rows.find(r => typeof r.period === 'number' && r.cumSavings >= fortySavings)?.period || term + 1;
+    const requiredSavings = target * DELIVERY_RATIO;
+    let savingsMonth = rows.find(r => typeof r.period === 'number' && r.cumSavings >= requiredSavings)?.period || term + 1;
     const downRatio = target > 0 ? Math.max(0, Math.min(1, down / target)) : 0;
-    const reducedDurationMonth = Math.ceil(0.40 * term * Math.max(0, 1 - downRatio));
-    const unreducedDurationMonth = Math.ceil(0.40 * term);
-    const legalFloorMonth = 6;
+    const reducedDurationMonth = Math.ceil(DELIVERY_RATIO * term * Math.max(0, 1 - downRatio));
+    const unreducedDurationMonth = Math.ceil(DELIVERY_RATIO * term);
+    const legalFloorDate = addDays(start, MIN_SAVING_DAYS);
+    const legalFloorMonth = rows.find(r => typeof r.period === 'number' && r.date >= legalFloorDate)?.period || term + 1;
     let bestDeliveryMonth = Math.max(legalFloorMonth, savingsMonth, reducedDurationMonth);
     let worstDeliveryMonth = Math.max(legalFloorMonth, savingsMonth, unreducedDurationMonth);
+
+    const installments = rows.filter(r => typeof r.period === 'number').map(r => r.savePay).filter(v => v > 0);
+    const minInstallment = installments.length ? Math.min(...installments) : 0;
+    const maxInstallment = installments.length ? Math.max(...installments) : 0;
+    if (minInstallment + 0.01 < maxInstallment / MAX_INSTALLMENT_RATIO) {
+      warnings.push({type: 'danger', text: `Ödeme planı mevzuattaki taksit oranını sağlamıyor: en düşük taksit ${money(minInstallment)}, en yüksek taksit ${money(maxInstallment)}. En düşük taksit, en yüksek taksidin üçte birinden az olamaz.`});
+    }
 
     if (bestDeliveryMonth > term) {
       warnings.push({type: 'danger', text: 'Hesaplanan tahsisat koşulları vade içinde sağlanmıyor. Aylık ödeme/peşinat/vade kurgusu gözden geçirilmeli.'});
@@ -705,11 +757,11 @@
     $('scenarios').innerHTML = `
       <div class="box">
         <h3>En iyi senaryo</h3>
-        <p>Aylık ödeme boş bırakılırsa sistem bu senaryoyu hedefleyerek otomatik hesaplama yapar. Ödemeler vadesinde yapılır; peşinat indirimi, %40 tasarruf ve 150 gün/5 ödeme koşulu sağlanır. Tahmini teslim/tahsisat: <b>${s.bestDeliveryMonth}. ay</b>.</p>
+        <p>Aylık ödeme boş bırakılırsa sistem bu senaryoyu hedefleyerek otomatik hesaplama yapar. Ödemeler vadesinde yapılır; peşinat indirimi, %45 tasarruf ve 180 günlük asgari süre sağlanır. Tahmini teslim/tahsisat: <b>${s.bestDeliveryMonth}. ay</b>.</p>
       </div>
       <div class="box">
         <h3>En kötü senaryo</h3>
-        <p>Peşinatın süreyi öne çekme etkisi uygulanmaz veya sözleşme/ödeme performansı nedeniyle azami çerçeve dikkate alınır. Vadenin %40’ı yukarı yuvarlanır. Bu durumda tahmini teslim/tahsisat: <b>${s.worstDeliveryMonth}. ay</b>.</p>
+        <p>Peşinatın süreyi öne çekme etkisi uygulanmaz veya sözleşme/ödeme performansı nedeniyle azami çerçeve dikkate alınır. Vadenin %45’i yukarı yuvarlanır. Bu durumda tahmini teslim/tahsisat: <b>${s.worstDeliveryMonth}. ay</b>.</p>
       </div>
     `;
   }
