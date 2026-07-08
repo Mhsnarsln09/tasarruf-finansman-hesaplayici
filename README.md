@@ -10,6 +10,10 @@ Türkiye'deki tasarruf finansman teklif örneklerine göre hazırlanmış, mobil
 - Kullanıcının belirlediği ay sayısına göre sabit vadeli plan oluşturma
 - Sayısal alanlarda otomatik Türkçe binlik ayırıcı maskesi
 - Artışlı / artışsız ödeme planı seçimi
+- Tahsisat öncesi ve sonrası farklı taksitlerle kademeli ödeme planı
+- İstenilen sayıda ödeme dönemi ve ara ödeme tanımlama
+- Otomatik veya sözleşmede sabit tahsisat ayı
+- Kademeli planlarda BDDK taksit oranı ve tahsisat uygunluk uyarıları
 - Organizasyon ücreti hesaplama
 - En iyi ve en kötü senaryo teslim / tahsisat ayı gösterimi
 - Aylık ödeme planı tablosu

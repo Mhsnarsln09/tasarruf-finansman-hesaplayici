@@ -95,7 +95,15 @@
     .notice { padding: 14px 16px; border-radius: 14px; border: 1px solid #ffd8a8; background: var(--warn); color: #7a4b00; line-height: 1.45; font-size: 13px; margin: 12px 0; }
     .notice.ok { background: var(--ok); border-color: #b8dfba; color: #215e24; }
     .notice.danger { background: var(--danger); border-color: #ffccc7; color: #8c1d18; }
-    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 16px; background: white; max-height: 680px; }
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: white;
+      max-height: 680px;
+      padding-bottom: 14px;
+      scrollbar-gutter: stable;
+    }
     table { border-collapse: collapse; width: 100%; min-width: 980px; font-size: 13px; }
     thead th { position: sticky; top: 0; z-index: 1; background: #f8fafc; color: #344054; text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--line); white-space: nowrap; }
     tbody td { padding: 10px; border-bottom: 1px solid #eef2f7; vertical-align: top; white-space: nowrap; }
@@ -139,6 +147,12 @@
     .advanced-content { padding: 14px 14px 0; background: white; }
     .advanced-content .row2,
     .advanced-content .row3 { grid-template-columns: 1fr; gap: 0; }
+    .plan-panel { padding: 14px; margin: 0 0 14px; border: 1px solid #d8dee9; border-radius: 14px; background: #f8fafc; }
+    .dynamic-row { display: grid; grid-template-columns: 1fr 1.35fr auto; gap: 8px; align-items: end; margin-top: 8px; }
+    .dynamic-row .field { margin: 0; }
+    .dynamic-row button { min-height: 44px; padding: 9px 12px; background: #fff1f0; color: #8c1d18; border: 1px solid #ffccc7; }
+    .section-title { margin: 0 0 8px; font-size: 14px; color: #344054; }
+    .hidden { display: none !important; }
     @media (max-width: 1100px) {
       .wrap { padding: 20px; }
       .grid { grid-template-columns: 380px minmax(0, 1fr); gap: 16px; }
@@ -179,6 +193,8 @@
         border-radius: 11px;
       }
       .buttons { display: grid; grid-template-columns: 1fr; }
+      .dynamic-row { grid-template-columns: 1fr 1fr; }
+      .dynamic-row button { grid-column: 1 / -1; }
       button { width: 100%; min-height: 44px; }
       .tabs { width: 100%; }
       .tab { max-width: 100%; white-space: normal; }
@@ -188,6 +204,7 @@
         border-radius: 0;
         overflow: visible;
         background: transparent;
+        padding-bottom: 0;
       }
       table {
         min-width: 0;
@@ -264,7 +281,7 @@
       .wrap { max-width: none; padding: 0; }
       .hero, .input-card, .buttons, details { display: none !important; }
       .card { border: 0; box-shadow: none; }
-      .table-wrap { max-height: none; overflow: visible; }
+      .table-wrap { max-height: none; overflow: visible; padding-bottom: 0; }
       table { display: table; width: 100%; min-width: 0; table-layout: fixed; font-size: 9px; }
       thead { display: table-header-group; }
       tbody { display: table-row-group; }
@@ -324,9 +341,45 @@
           </div>
 
           <div class="field">
+            <label for="paymentMode">Ödeme modeli</label>
+            <select id="paymentMode">
+              <option value="standard">Sabit / yıllık artışlı</option>
+              <option value="manual">Kademeli / tahsisat sonrası artışlı</option>
+            </select>
+          </div>
+
+          <div id="standardPlanPanel">
+          <div class="field">
             <label for="monthlyPayment">İlk aylık ödeme <span>boş bırakılabilir</span></label>
             <input id="monthlyPayment" inputmode="numeric" data-number-format="money" placeholder="Otomatik hesaplansın" />
             <div class="hint">Boş kalırsa en iyi senaryoya göre aylık ödeme otomatik hesaplanır.</div>
+          </div>
+          </div>
+
+          <div id="manualPlanPanel" class="plan-panel hidden">
+            <h3 class="section-title">Kademeli ödeme dönemleri</h3>
+            <div class="hint">Örnek: tahsisata kadar 6 ay × 30.000 TL, ardından 90.000 TL. Plan hedefi kapatmazsa son kademe 240 aya kadar devam eder.</div>
+            <div id="stageRows"></div>
+            <div class="buttons"><button type="button" class="secondary" id="addStageBtn">Dönem ekle</button></div>
+
+            <h3 class="section-title" style="margin-top:16px">Tahsisat belirleme</h3>
+            <div class="row2">
+              <div class="field">
+                <label for="deliveryMode">Tahsisat ayı</label>
+                <select id="deliveryMode">
+                  <option value="auto">Mevzuat koşullarından otomatik</option>
+                  <option value="fixed">Sözleşmede sabit</option>
+                </select>
+              </div>
+              <div class="field" id="fixedDeliveryField">
+                <label for="fixedDeliveryMonth">Sözleşmedeki ay</label>
+                <input id="fixedDeliveryMonth" inputmode="numeric" data-number-format="integer" value="6" maxlength="3" />
+              </div>
+            </div>
+
+            <h3 class="section-title">Ara ödemeler</h3>
+            <div id="extraRows"></div>
+            <div class="buttons"><button type="button" class="secondary" id="addExtraBtn">Ara ödeme ekle</button></div>
           </div>
 
           <details class="advanced-settings">
@@ -428,6 +481,7 @@
                   <th>Dönem</th>
                   <th>Taksit tarihi</th>
                   <th>Tasarruf / finansman ödemesi</th>
+                  <th>Ara ödeme</th>
                   <th>Org. ödemesi</th>
                   <th>Toplam aylık çıkış</th>
                   <th>Kümülatif tasarruf</th>
@@ -458,6 +512,65 @@
   const tbody = document.querySelector('#planTable tbody');
   let lastRows = [];
   let lastSummary = null;
+
+  function dynamicMoneyInput(value) {
+    return `<input inputmode="numeric" data-number-format="money" value="${value}" />`;
+  }
+
+  function bindDynamicInputs(container) {
+    container.querySelectorAll('input[data-number-format]').forEach(input => {
+      input.addEventListener('input', () => formatNumericInput(input));
+      input.addEventListener('blur', calc);
+      formatNumericInput(input);
+    });
+  }
+
+  function addStage(duration = 6, amount = '30.000') {
+    const row = document.createElement('div');
+    row.className = 'dynamic-row stage-row';
+    row.innerHTML = `<div class="field"><label>Süre <span>ay</span></label><input class="stage-duration" inputmode="numeric" data-number-format="integer" value="${duration}" maxlength="3" /></div>
+      <div class="field"><label>Aylık taksit <span>TL</span></label>${dynamicMoneyInput(amount)}</div>
+      <button type="button" aria-label="Dönemi sil">Sil</button>`;
+    row.querySelector('button').addEventListener('click', () => { row.remove(); calc(); });
+    $('stageRows').appendChild(row);
+    bindDynamicInputs(row);
+  }
+
+  function addExtra(month = 6, amount = '0') {
+    const row = document.createElement('div');
+    row.className = 'dynamic-row extra-row';
+    row.innerHTML = `<div class="field"><label>Ödeme ayı</label><input class="extra-month" inputmode="numeric" data-number-format="integer" value="${month}" maxlength="3" /></div>
+      <div class="field"><label>Ara ödeme <span>TL</span></label>${dynamicMoneyInput(amount)}</div>
+      <button type="button" aria-label="Ara ödemeyi sil">Sil</button>`;
+    row.querySelector('button').addEventListener('click', () => { row.remove(); calc(); });
+    $('extraRows').appendChild(row);
+    bindDynamicInputs(row);
+  }
+
+  function getManualPlan() {
+    const stages = [...document.querySelectorAll('.stage-row')].map(row => ({
+      duration: Math.max(1, Math.min(240, Math.trunc(parseNum(row.querySelector('.stage-duration').value)))),
+      amount: parseNum(row.querySelector('input[data-number-format="money"]').value)
+    })).filter(stage => stage.amount > 0);
+    const extras = new Map();
+    document.querySelectorAll('.extra-row').forEach(row => {
+      const month = Math.max(1, Math.min(240, Math.trunc(parseNum(row.querySelector('.extra-month').value))));
+      const amount = Math.max(0, parseNum(row.querySelector('input[data-number-format="money"]').value));
+      if (amount > 0) extras.set(month, (extras.get(month) || 0) + amount);
+    });
+    const payments = [];
+    stages.forEach(stage => {
+      for (let i = 0; i < stage.duration && payments.length < 240; i += 1) payments.push(stage.amount);
+    });
+    return { stages, extras, payments };
+  }
+
+  function syncPaymentMode() {
+    const manual = $('paymentMode').value === 'manual';
+    $('standardPlanPanel').classList.toggle('hidden', manual);
+    $('manualPlanPanel').classList.toggle('hidden', !manual);
+    $('fixedDeliveryField').classList.toggle('hidden', $('deliveryMode').value !== 'fixed');
+  }
 
   function parseNum(v) {
     if (typeof v === 'number') return v;
@@ -598,15 +711,18 @@
 
   function calc() {
     syncIncrease();
+    syncPaymentMode();
     const target = parseNum($('targetAmount').value);
     const down = Math.min(parseNum($('downPayment').value), target);
     const orgRate = parseNum($('orgFeeRate').value) / 100;
     const orgFee = round100(target * orgRate);
     const annualIncrease = getAnnualIncrease();
     const monthlyInput = parseNum($('monthlyPayment').value);
-    const requestedTerm = Math.max(0, Math.min(240, Math.trunc(parseNum($('planTerm').value))));
+    const manualMode = $('paymentMode').value === 'manual';
+    const manualPlan = getManualPlan();
+    const requestedTerm = manualMode ? 0 : Math.max(0, Math.min(240, Math.trunc(parseNum($('planTerm').value))));
     const remainingAtStart = Math.max(0, target - down);
-    const firstMonthly = requestedTerm > 0
+    const firstMonthly = manualMode ? (manualPlan.payments[0] || 0) : requestedTerm > 0
       ? monthlyForTerm(remainingAtStart, annualIncrease, requestedTerm)
       : monthlyInput > 0 ? monthlyInput : autoMonthly(target, down, annualIncrease);
     const finalMultiplier = Number($('finalMultiplier').value || 2);
@@ -621,6 +737,7 @@
     if (target <= 0) warnings.push({type: 'danger', text: 'Plan / tasarruf tutarı sıfırdan büyük olmalıdır.'});
     if (down < 0) warnings.push({type: 'danger', text: 'Peşinat negatif olamaz.'});
     if (firstMonthly <= 0) warnings.push({type: 'danger', text: 'Aylık ödeme sıfırdan büyük olmalıdır.'});
+    if (manualMode && !manualPlan.stages.length) warnings.push({type: 'danger', text: 'Kademeli planda en az bir geçerli ödeme dönemi bulunmalıdır.'});
     if (parseNum($('planTerm').value) > 240) warnings.push({type: 'warn', text: 'Plan süresi en fazla 240 ay olabilir; hesaplama 240 ay üzerinden yapıldı.'});
     if (requestedTerm > 0 && monthlyInput > 0) warnings.push({type: 'warn', text: 'Plan süresi girildiği için aylık ödeme tutarı yerine seçilen vade öncelikli olarak kullanıldı.'});
     if (orgRate < 0 || orgRate > .25) warnings.push({type: 'warn', text: 'Organizasyon ücreti oranı kontrol edilmeli. Örnek PDF’lerde oran %7’dir; şirket tarifesine göre değişebilir.'});
@@ -636,11 +753,11 @@
     const orgPerPeriod = orgMode === 'taksitli' ? orgFee / orgInstallments : 0;
     if (orgMode === 'pesin' && orgFee > 0) {
       cumulativeTotal += orgFee;
-      rows.push({ period: '#', date: start, savePay: 0, orgPay: orgFee, outflow: orgFee, cumSavings: 0, cumTotal: cumulativeTotal, type: 'Organizasyon Ücreti', note: 'Peşin tahsilat' });
+      rows.push({ period: '#', date: start, savePay: 0, extraPay: 0, orgPay: orgFee, outflow: orgFee, cumSavings: 0, cumTotal: cumulativeTotal, type: 'Organizasyon Ücreti', note: 'Peşin tahsilat' });
     }
     if (down > 0) {
       cumulativeTotal += down;
-      rows.push({ period: '#', date: start, savePay: down, orgPay: 0, outflow: down, cumSavings: down, cumTotal: cumulativeTotal, type: product + ' Planı Peşinatı', note: 'Peşinat, teslim ayı hesabında dikkate alınır' });
+      rows.push({ period: '#', date: start, savePay: down, extraPay: 0, orgPay: 0, outflow: down, cumSavings: down, cumTotal: cumulativeTotal, type: product + ' Planı Peşinatı', note: 'Peşinat, teslim ayı hesabında dikkate alınır' });
     }
 
     const periodLimit = requestedTerm > 0 ? requestedTerm : 240;
@@ -648,8 +765,16 @@
       period += 1;
       safety += 1;
       const yearIndex = Math.floor((period - 1) / 12);
-      const uncappedRegular = firstMonthly * Math.pow(1 + annualIncrease, yearIndex);
-      const regular = Math.min(uncappedRegular, firstMonthly * MAX_INSTALLMENT_RATIO);
+      let regular;
+      if (manualMode) {
+        regular = manualPlan.payments[period - 1] || manualPlan.payments[manualPlan.payments.length - 1] || 0;
+      } else {
+        const uncappedRegular = firstMonthly * Math.pow(1 + annualIncrease, yearIndex);
+        regular = Math.min(uncappedRegular, firstMonthly * MAX_INSTALLMENT_RATIO);
+      }
+      const plannedExtra = manualMode ? (manualPlan.extras.get(period) || 0) : 0;
+      const extraPay = Math.min(plannedExtra, remaining);
+      remaining -= extraPay;
       let savePay;
       if (requestedTerm > 0 && period === requestedTerm) {
         savePay = remaining;
@@ -660,24 +785,29 @@
       }
       const orgPay = orgMode === 'taksitli' && period <= orgInstallments ? orgPerPeriod : 0;
       remaining -= savePay;
-      cumulativeSavings += savePay;
-      cumulativeTotal += savePay + orgPay;
+      cumulativeSavings += savePay + extraPay;
+      cumulativeTotal += savePay + extraPay + orgPay;
       rows.push({
         period,
         date: period === 1 ? start : addMonthsForPeriod(start, period, paymentDay),
         savePay,
+        extraPay,
         orgPay,
-        outflow: savePay + orgPay,
+        outflow: savePay + extraPay + orgPay,
         cumSavings: cumulativeSavings,
         cumTotal: cumulativeTotal,
         type: 'Tasarruf Taksidi',
-        note: ''
+        note: extraPay > 0 ? `${money(extraPay)} ara ödeme` : ''
       });
+    }
+
+    if (manualMode && manualPlan.payments.length && period > manualPlan.payments.length) {
+      warnings.push({type: 'warn', text: `Tanımlanan dönemler hedef tutarı kapatmadığı için son taksit ${period - manualPlan.payments.length} ay daha devam ettirildi.`});
     }
 
     if (requestedTerm === 0 && safety >= 240 && remaining > 0.5) warnings.push({type: 'danger', text: 'Bu aylık ödeme ile vade 240 ayı aşıyor. Plan gerçekçi olmayabilir.'});
 
-    if (rebalanceInstallments(rows, remainingAtStart, annualIncrease)) {
+    if (!manualMode && rebalanceInstallments(rows, remainingAtStart, annualIncrease)) {
       warnings.push({type: 'warn', text: 'Son taksit mevzuattaki 1/3 oranının altında kalacağı için taksitler, toplam tutar ve vade korunarak yeniden dengelendi.'});
     }
 
@@ -691,6 +821,13 @@
     const legalFloorMonth = rows.find(r => typeof r.period === 'number' && r.date >= legalFloorDate)?.period || term + 1;
     let bestDeliveryMonth = Math.max(legalFloorMonth, savingsMonth, reducedDurationMonth);
     let worstDeliveryMonth = Math.max(legalFloorMonth, savingsMonth, unreducedDurationMonth);
+    if (manualMode && $('deliveryMode').value === 'fixed') {
+      const fixedMonth = Math.max(1, Math.min(term, Math.trunc(parseNum($('fixedDeliveryMonth').value)) || 1));
+      const legalDeliveryMonth = Math.max(legalFloorMonth, savingsMonth, reducedDurationMonth);
+      bestDeliveryMonth = Math.max(fixedMonth, legalDeliveryMonth);
+      worstDeliveryMonth = bestDeliveryMonth;
+      if (fixedMonth < legalDeliveryMonth) warnings.push({type: 'danger', text: `Sözleşmedeki ${fixedMonth}. ay, hesaplanan mevzuat koşullarını sağlamıyor. Tahsisat en erken ${legalDeliveryMonth}. aya ötelenerek gösterildi.`});
+    }
 
     const installments = rows.filter(r => typeof r.period === 'number').map(r => r.savePay).filter(v => v > 0);
     const minInstallment = installments.length ? Math.min(...installments) : 0;
@@ -708,26 +845,27 @@
     rows.forEach(r => {
       if (typeof r.period === 'number') {
         r.type = r.period <= bestDeliveryMonth ? 'Tasarruf Taksidi' : 'Finansman Taksidi';
-        if (r.period === bestDeliveryMonth) r.note = 'İdeal teslim / tahsisat ayı';
+        if (r.period === bestDeliveryMonth) r.note = (r.note ? r.note + ' + ' : '') + 'İdeal teslim / tahsisat ayı';
         if (r.period === worstDeliveryMonth && worstDeliveryMonth !== bestDeliveryMonth) r.note = (r.note ? r.note + ' + ' : '') + 'Maksimum hesaplanan teslim ayı';
       }
     });
 
     const firstMonthlyActual = rows.find(r => r.period === 1)?.savePay || 0;
+    const firstExtraActual = rows.find(r => r.period === 1)?.extraPay || 0;
     const firstOrgActual = orgMode === 'pesin' ? orgFee : orgPerPeriod;
-    const totalFirstPayment = down + firstMonthlyActual + firstOrgActual;
+    const totalFirstPayment = down + firstMonthlyActual + firstExtraActual + firstOrgActual;
     const totalCost = target + orgFee;
     const bestDate = addMonthsForPeriod(start, bestDeliveryMonth, paymentDay);
     const worstDate = addMonthsForPeriod(start, worstDeliveryMonth, paymentDay);
 
     lastRows = rows;
-    lastSummary = { target, down, orgFee, firstMonthly: firstMonthlyActual, totalFirstPayment, totalCost, term, bestDeliveryMonth, worstDeliveryMonth, bestDate, worstDate, annualIncrease, orgMode, orgInstallments };
+    lastSummary = { target, down, orgFee, firstMonthly: firstMonthlyActual, totalFirstPayment, totalCost, term, bestDeliveryMonth, worstDeliveryMonth, bestDate, worstDate, annualIncrease, orgMode, orgInstallments, manualMode, deliveryMode: $('deliveryMode').value };
 
-    renderWarnings(warnings, monthlyInput <= 0, firstMonthly, requestedTerm);
+    renderWarnings(warnings, !manualMode && monthlyInput <= 0, firstMonthly, requestedTerm);
     renderMetrics(lastSummary);
     renderScenarios(lastSummary);
     renderTable(rows, bestDeliveryMonth, worstDeliveryMonth);
-    $('statusTab').textContent = product + ' | Y.A. ' + pct(annualIncrease * 100) + ' | T.A. %0';
+    $('statusTab').textContent = manualMode ? `${product} | Kademeli plan` : product + ' | Y.A. ' + pct(annualIncrease * 100) + ' | T.A. %0';
   }
 
   function renderWarnings(warnings, autoUsed, autoAmount, requestedTerm) {
@@ -754,6 +892,15 @@
   }
 
   function renderScenarios(s) {
+    if (s.manualMode) {
+      const deliveryText = s.deliveryMode === 'fixed'
+        ? 'Sözleşmede girilen ay ile mevzuatın izin verdiği ilk ay birlikte değerlendirilmiştir.'
+        : 'Girilen kademeler, ara ödemeler ve mevzuat koşulları üzerinden otomatik hesaplanmıştır.';
+      $('scenarios').innerHTML = `
+        <div class="box"><h3>Kademeli ödeme planı</h3><p>${deliveryText} Tahmini tahsisat: <b>${s.bestDeliveryMonth}. ay</b>.</p></div>
+        <div class="box"><h3>Mevzuat kontrolü</h3><p>%45 birikim, süre sınırı ve en düşük/en yüksek taksit oranı ödeme akışı üzerinde kontrol edilmiştir. Plan vadesi: <b>${s.term} ay</b>.</p></div>`;
+      return;
+    }
     $('scenarios').innerHTML = `
       <div class="box">
         <h3>En iyi senaryo</h3>
@@ -774,6 +921,7 @@
         <td data-label="Dönem">${r.period}</td>
         <td data-label="Taksit tarihi">${dateTR(r.date)}</td>
         <td data-label="Tasarruf / finansman ödemesi">${money(r.savePay)}</td>
+        <td data-label="Ara ödeme">${money(r.extraPay || 0)}</td>
         <td data-label="Org. ödemesi">${money(r.orgPay)}</td>
         <td data-label="Toplam aylık çıkış"><b>${money(r.outflow)}</b></td>
         <td data-label="Kümülatif tasarruf">${money(r.cumSavings)}</td>
@@ -785,6 +933,7 @@
   }
 
   function setSample(kind) {
+    $('paymentMode').value = 'standard';
     if (kind === 'carInc') {
       $('productType').value = 'Tasit';
       $('startDate').value = '2026-05-05';
@@ -832,11 +981,12 @@
 
   function csvDownload() {
     if (!lastRows.length) calc();
-    const header = ['Dönem','Taksit Tarihi','Tasarruf/Finansman Ödemesi','Organizasyon Ödemesi','Toplam Aylık Çıkış','Kümülatif Tasarruf','Kümülatif Toplam Ödeme','Ödeme Türü','Not'];
+    const header = ['Dönem','Taksit Tarihi','Tasarruf/Finansman Ödemesi','Ara Ödeme','Organizasyon Ödemesi','Toplam Aylık Çıkış','Kümülatif Tasarruf','Kümülatif Toplam Ödeme','Ödeme Türü','Not'];
     const lines = [header.join(';')].concat(lastRows.map(r => [
       r.period,
       dateTR(r.date),
       moneyRaw(r.savePay),
+      moneyRaw(r.extraPay || 0),
       moneyRaw(r.orgPay),
       moneyRaw(r.outflow),
       moneyRaw(r.cumSavings),
@@ -854,6 +1004,10 @@
 
   $('calcBtn').addEventListener('click', calc);
   $('increaseMode').addEventListener('change', calc);
+  $('paymentMode').addEventListener('change', calc);
+  $('deliveryMode').addEventListener('change', calc);
+  $('addStageBtn').addEventListener('click', () => { addStage(12, '50.000'); calc(); });
+  $('addExtraBtn').addEventListener('click', () => { addExtra(6, '100.000'); calc(); });
   $('sampleCarInc').addEventListener('click', () => setSample('carInc'));
   $('sampleCarFlat').addEventListener('click', () => setSample('carFlat'));
   $('sampleHomeInc').addEventListener('click', () => setSample('homeInc'));
@@ -881,6 +1035,8 @@
 
   const today = new Date();
   $('startDate').value = today.toISOString().slice(0,10);
+  addStage(6, '30.000');
+  addStage(24, '90.000');
   calc();
 })();
 </script>
